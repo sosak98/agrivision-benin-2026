@@ -1,6 +1,6 @@
 /* AGRIVISION BÉNIN — données réelles, version web */
 
-const EQUIPE = { nom: "AgriVision Bénin", categorie: "Cartographie agricole" };
+const EQUIPE = { nom: "Équipe AgriVision — Groupe 3", categorie: "Orange" };
 
 const MISSIONS_DATA = {
   "derniere_mission": {

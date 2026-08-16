@@ -1,6 +1,6 @@
 const CACHE='agrivision-production-v5';
 const CORE=[
-  './','./index.html','./analyse.html','./resultats.html','./actions.html','./qualite.html','./historique.html','./ia.html','./rapport.html','./equipe.html','./offline.html',
+  './','./index.html','./analyse.html','./resultats.html','./actions.html','./qualite.html','./historique.html','./ia.html','./rapport.html','./apropos.html','./equipe.html','./offline.html',
   './css/style.css','./css/finale.css',
   './js/mobile-nav.js','./js/tech-access.js','./js/tech-guard.js','./js/data.js','./js/dashboard-dynamic.js','./js/actions-dynamic.js','./js/actions-audio.js','./js/quality-dynamic.js','./js/carte.js','./js/qgis-import.js','./js/history-dynamic.js','./js/assistant-local.js','./js/rapport.js','./js/offline.js','./js/install.js',
   './vendor/leaflet/leaflet.css','./vendor/leaflet/leaflet.js',
