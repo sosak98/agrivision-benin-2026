@@ -41,3 +41,35 @@ nav{position:sticky;top:0;z-index:1000;background:rgba(255,255,255,.96);backdrop
 @media print{nav,.site-footer,.report-actions,.index-bar{display:none!important}.shell{border:none;box-shadow:none}.report-doc{border:none;padding:0}body{background:#fff}}
 .mic-status{padding:7px 18px 10px;font-size:10px;color:var(--ink-soft);background:#fafbf8}.recording{background:#d0473f!important;color:#fff!important;border-color:#d0473f!important;animation:micPulse 1s infinite}@keyframes micPulse{50%{opacity:.65}}
 .comparison-panel{background:#fff;border:1px solid var(--line-strong);border-radius:15px;padding:22px}.comparison-head{display:flex;justify-content:space-between;gap:12px;align-items:start}.comparison-head h3{margin-top:5px}.trend-badge{padding:7px 11px;border-radius:20px;font-size:10px;font-weight:900}.trend-badge.up{background:#dcedd4;color:#245d2d}.trend-badge.down{background:#f8d7d3;color:#8f2e28}.mission-chart{height:230px;display:flex;align-items:end;justify-content:center;gap:28px;margin:24px 0 15px;border-bottom:1px solid var(--line-strong);padding:0 20px}.chart-column{width:min(120px,28%);text-align:center}.bar-track{height:155px;background:#edf0ea;border-radius:10px 10px 0 0;display:flex;align-items:end;overflow:hidden}.bar-fill{width:100%;background:#9eae91;min-height:4px}.bar-fill.latest{background:linear-gradient(#8fc93a,#1e5631)}.bar-value{font-weight:900;color:var(--forest);font-size:14px;margin-bottom:5px}.bar-date{font-size:10px;font-weight:800;margin-top:6px}.bar-name{font-size:8px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+/* ===== Navigation mobile et assistant compact ===== */
+.nav-toggle,.mobile-section-toggle,.assistant-options-toggle{display:none}
+.btn-icon{display:inline-block}.btn-label{display:inline-block;margin-left:5px}
+@media(max-width:760px){
+  nav{position:sticky;top:0;display:flex!important;flex-direction:row!important;flex-wrap:wrap;align-items:center!important;justify-content:space-between!important;padding:11px 16px!important;gap:8px!important}
+  .brand{min-width:0}.brand-name{font-size:16px}.brand-sub{display:none!important}#logo{width:37px;height:37px}
+  .nav-toggle{display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--line-strong);border-radius:10px;background:#fff;color:var(--forest-deep);font-size:21px;font-weight:800;cursor:pointer}
+  nav .tabs{display:none!important;width:100%;grid-template-columns:1fr 1fr;gap:6px;padding:7px 0 3px;overflow:visible!important}
+  nav.menu-open .tabs{display:grid!important}
+  nav .tab{display:block;text-align:center;padding:10px 7px;border:1px solid var(--line);background:#fff;font-size:11px;border-radius:8px}
+  nav .tab.active{background:rgba(111,179,63,.15);border-color:#bcd9ad}
+  .assistant-main{display:flex;flex-direction:column;padding-top:23px}
+  .assistant-main>.section-title{order:1}.assistant-main>.truth-banner{order:2}.assistant-main>.chat-shell{order:3}.assistant-main>#toggle-glossary{order:4}.assistant-main>.simple-glossary{order:5}.assistant-main>.disclaimer{order:6}
+  .assistant-main .section-title{margin-bottom:13px}.assistant-main .section-title h2{font-size:24px;line-height:1.12}
+  .assistant-main>.truth-banner{padding:14px;margin-bottom:14px!important;font-size:12px}
+  .mobile-section-toggle,.assistant-options-toggle{display:block;width:100%;border:1px solid #b9d7aa;background:#f3f9ef;color:var(--forest-deep);border-radius:10px;padding:11px 13px;font-size:12px;font-weight:800;text-align:left;cursor:pointer}
+  .assistant-options-toggle{border-radius:0;border-width:0 0 1px;background:#f7f9f5}
+  .assistant-main>.simple-glossary{display:none!important;margin-top:9px}.assistant-main.glossary-open>.simple-glossary{display:grid!important;grid-template-columns:1fr 1fr}
+  .learn-card{padding:11px;min-height:84px}.learn-card b{font-size:12px}.learn-card span{font-size:10px}
+  .chat-shell{height:600px;max-height:72vh;min-height:500px}
+  .chat-shell .chat-key-bar,.chat-shell .voice-bar{display:none}
+  .chat-shell.options-open .chat-key-bar,.chat-shell.options-open .voice-bar{display:flex;flex-direction:column;align-items:stretch}
+  .chat-key-bar input,.voice-bar select{width:100%;min-width:0}.voice-bar button{width:100%}
+  .chat-context{font-size:10px;line-height:1.4;padding:9px 12px}
+  .chat-messages{padding:13px;gap:10px}.msg{max-width:92%;font-size:12px;padding:10px 12px}
+  .msg-suggestions{display:flex;flex-wrap:nowrap;overflow-x:auto;padding:7px 12px 10px;scroll-snap-type:x proximity}.suggestion-chip{flex:0 0 auto;scroll-snap-align:start;font-size:10px;padding:7px 10px}
+  .chat-input-bar{display:grid!important;grid-template-columns:minmax(0,1fr) 45px 45px;gap:7px;padding:11px!important}
+  .chat-input-bar input{grid-column:1;min-width:0!important;width:100%;padding:10px!important}
+  #btn-mic{grid-column:2;width:45px;padding:0;font-size:18px}#btn-send{grid-column:3;width:45px;padding:0;font-size:18px}#btn-listen{display:none}
+  .chat-input-bar .btn-label{display:none}.mic-status{font-size:9px;padding:5px 12px 8px}
+}
+@media(max-width:390px){nav .tabs{grid-template-columns:1fr}.assistant-main.glossary-open>.simple-glossary{grid-template-columns:1fr}}
