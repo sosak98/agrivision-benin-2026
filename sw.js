@@ -1,8 +1,8 @@
-const CACHE='agrivision-production-v3';
+const CACHE='agrivision-production-v4';
 const CORE=[
-  './','./index.html','./analyse.html','./resultats.html','./actions.html','./qualite.html','./historique.html','./ia.html','./rapport.html','./offline.html',
+  './','./index.html','./analyse.html','./resultats.html','./actions.html','./qualite.html','./historique.html','./ia.html','./rapport.html','./equipe.html','./offline.html',
   './css/style.css','./css/finale.css',
-  './js/mobile-nav.js','./js/data.js','./js/dashboard-dynamic.js','./js/actions-dynamic.js','./js/actions-audio.js','./js/quality-dynamic.js','./js/carte.js','./js/qgis-import.js','./js/history-dynamic.js','./js/assistant-local.js','./js/rapport.js','./js/offline.js','./js/install.js',
+  './js/mobile-nav.js','./js/tech-access.js','./js/tech-guard.js','./js/data.js','./js/dashboard-dynamic.js','./js/actions-dynamic.js','./js/actions-audio.js','./js/quality-dynamic.js','./js/carte.js','./js/qgis-import.js','./js/history-dynamic.js','./js/assistant-local.js','./js/rapport.js','./js/offline.js','./js/install.js',
   './vendor/leaflet/leaflet.css','./vendor/leaflet/leaflet.js',
   './assets/logo.png','./assets/icon-192.png','./assets/icon-512.png','./assets/icon-maskable-512.png','./assets/apple-touch-icon.png',
   './assets/maps/map-zone1.png','./assets/maps/map-zone2.png','./assets/maps/map-zone3.png','./assets/maps/map-all.png','./manifest.json'

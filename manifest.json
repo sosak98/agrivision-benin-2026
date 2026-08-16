@@ -11,7 +11,11 @@
   "orientation": "any",
   "background_color": "#f4f6f1",
   "theme_color": "#123a20",
-  "categories": ["agriculture", "productivity", "utilities"],
+  "categories": [
+    "agriculture",
+    "productivity",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "assets/icon-192.png",
@@ -37,19 +41,23 @@
       "name": "Voir la carte",
       "short_name": "Carte",
       "url": "./resultats.html",
-      "icons": [{"src": "assets/icon-192.png", "sizes": "192x192"}]
+      "icons": [
+        {
+          "src": "assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Assistant agricole",
       "short_name": "Assistant",
       "url": "./ia.html",
-      "icons": [{"src": "assets/icon-192.png", "sizes": "192x192"}]
-    },
-    {
-      "name": "Importer une analyse",
-      "short_name": "Analyse",
-      "url": "./analyse.html",
-      "icons": [{"src": "assets/icon-192.png", "sizes": "192x192"}]
+      "icons": [
+        {
+          "src": "assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
