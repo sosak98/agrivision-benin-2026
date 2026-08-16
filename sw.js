@@ -1,4 +1,4 @@
-const CACHE='agrivision-production-v4';
+const CACHE='agrivision-production-v5';
 const CORE=[
   './','./index.html','./analyse.html','./resultats.html','./actions.html','./qualite.html','./historique.html','./ia.html','./rapport.html','./equipe.html','./offline.html',
   './css/style.css','./css/finale.css',

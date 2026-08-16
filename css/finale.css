@@ -64,3 +64,16 @@ nav{position:sticky;top:0;z-index:1000;background:rgba(255,255,255,.96);backdrop
  #btn-mic{grid-column:2;width:43px!important;padding:0;font-size:17px}#btn-listen{display:block!important;grid-column:3;width:43px!important;padding:0;font-size:17px}#btn-send{grid-column:4;width:43px!important;padding:0;font-size:17px}.chat-input-bar .btn-label{display:none}.mic-status{font-size:9px;padding:5px 12px 8px}
 }
 @media(max-width:390px){nav .tabs{grid-template-columns:1fr}.assistant-main.glossary-open>.simple-glossary{grid-template-columns:1fr}}
+
+/* Masquage strict des outils techniques dans l’espace agriculteur */
+.assistant-main .chat-key-bar[hidden],
+.assistant-main .chat-key-bar[aria-hidden="true"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+}
