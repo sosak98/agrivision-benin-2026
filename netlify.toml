@@ -7,7 +7,7 @@
     Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
-  for = "/manifest.webmanifest"
+  for = "/manifest.json"
   [headers.values]
     Content-Type = "application/manifest+json"
 
