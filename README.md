@@ -1,7 +1,5 @@
 # AgriVision Bénin
 
-**ÉlectroChallenge 2026 — Catégorie Orange — Groupe 3**
-
 AgriVision transforme les résultats issus du drone, de WebODM et de QGIS en cartes, explications simples, recommandations localisées, historique et rapport.
 
 ## Démarrage local
