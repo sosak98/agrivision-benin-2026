@@ -327,20 +327,30 @@
       }
     }
   }
-  // Rapport bouton
+  // Rapport bouton — bilingue : même bouton parle la langue du sélecteur
+  function updateRapportBtn(){
+    const btn=document.getElementById('rapport-fon-btn');
+    if(!btn) return;
+    btn.textContent = isFon() ? '🔊 Écouter le rapport en Fɔ̀ngbè (1 min)' : '🔊 Écouter le rapport en Français (1 min)';
+  }
   document.addEventListener('click', (e)=>{
     const btn=e.target.closest('#rapport-fon-btn');
     if(!btn) return;
-    if(isFon()){ e.preventDefault(); playRapportFon(); }
+    e.preventDefault();
+    if(isFon()) playRapportFon();
     else {
-      // En Français : TTS complet du rapport
       const m=window.MISSIONS_DATA?.derniere_mission;
       const zones=(window.ZONES_GEOJSON?.features||[]).map(f=>f.properties);
-      let text=`Rapport AgriVision ${m?.date||''}, ${m?.parcelle||''}. `;
+      let text=`Rapport AgriVision du ${m?.date||'13 août 2026'}, parcelle ${m?.parcelle||'Cotonou'}, ${m?.hectares_analyses||2.17} hectares. `;
       zones.forEach(z=>{ text+=`${z.nom}, ${z.surface_ha} hectare, VARI ${z.vari}, ${z.risque}. `; text+= (z.recommandations||[]).join('. ') + '. '; });
+      text+= ' Fin du rapport. Contact 01 98 41 92 40.';
       if(window.AgriAudio) window.AgriAudio.speak(text, {lang:'fr-FR', rate:0.88});
+      else if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance(text); u.lang='fr-FR'; speechSynthesis.cancel(); speechSynthesis.speak(u); }
     }
   });
+  // Met à jour le texte du bouton quand on change de langue
+  window.addEventListener('agrivision:lang', updateRapportBtn);
+  document.addEventListener('DOMContentLoaded', updateRapportBtn);
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
   else init();
