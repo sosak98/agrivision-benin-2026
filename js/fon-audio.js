@@ -1,8 +1,6 @@
-/* AgriVision — audio Fɔ̀ngbè
-   - 15 fichiers humains dans assets/audio/fon/*.opus
-   - sélecteur Français | Fɔ̀ngbè mémorisé
-   - bienvenue au choix de Fɔ̀ngbè (geste utilisateur)
-   - utilise AgriAudio pour tout (arrêt global, Échap, changement de page)
+/* AgriVision — audio Fɔ̀ngbè v11
+   15 fichiers humains mono 16kHz dans assets/audio/fon/*.opus
+   Sélecteur Français | Fɔ̀ngbè, bienvenue au clic, auto-play zone, visite guidée jury
 */
 (function () {
   const STORAGE_KEY = 'agrivision_audio_lang';
@@ -23,268 +21,274 @@
     verifier_avant_agir: 'assets/audio/fon/14_verifier_avant_agir.opus',
     contacter_equipe: 'assets/audio/fon/15_contacter_equipe.opus'
   };
-
-  // Map zones to their main Fon file
   const ZONE_TO_FON = {
-    'Zone 1': FON.zone_rouge,
-    'Zone 2': FON.zone_jaune,
-    'Zone 3': FON.zone_verte,
-    'zone 1': FON.zone_rouge,
-    'zone 2': FON.zone_jaune,
-    'zone 3': FON.zone_verte,
-    'zone1': FON.zone_rouge,
-    'zone2': FON.zone_jaune,
-    'zone3': FON.zone_verte,
-    'rouge': FON.zone_rouge,
-    'jaune': FON.zone_jaune,
-    'verte': FON.zone_verte,
-    'vert': FON.zone_verte,
-    'élevée': FON.zone_rouge, // rigor: but we handle by risque
-    'faible': FON.zone_verte,
-    'modere': FON.zone_jaune
+    'Zone 1': FON.zone_rouge, 'Zone 2': FON.zone_jaune, 'Zone 3': FON.zone_verte,
+    'zone 1': FON.zone_rouge, 'zone 2': FON.zone_jaune, 'zone 3': FON.zone_verte,
+    'rouge': FON.zone_rouge, 'jaune': FON.zone_jaune, 'verte': FON.zone_verte
   };
-
-  function getLang() {
-    try { return localStorage.getItem(STORAGE_KEY) || 'fr'; } catch (e) { return 'fr'; }
-  }
-  function setLang(v) {
-    try { localStorage.setItem(STORAGE_KEY, v); } catch (e) {}
+  function getLang(){ try{ return localStorage.getItem(STORAGE_KEY)||'fr'; }catch(e){ return 'fr'; } }
+  function setLang(v){
+    try{ localStorage.setItem(STORAGE_KEY,v); }catch(e){}
     updateUI();
     document.documentElement.setAttribute('data-audio-lang', v);
-    // dispatch event for other scripts
-    window.dispatchEvent(new CustomEvent('agrivision:lang', { detail: v }));
+    window.dispatchEvent(new CustomEvent('agrivision:lang',{detail:v}));
   }
-  function isFon() { return getLang() === 'fon'; }
+  function isFon(){ return getLang()==='fon'; }
 
-  function playFon(src, fallbackText) {
-    if (!window.AgriAudio) {
-      // fallback to direct audio if AgriAudio missing
-      const a = new Audio(src);
-      a.play().catch(() => { if (fallbackText && 'speechSynthesis' in window) { const u=new SpeechSynthesisUtterance(fallbackText); u.lang='fr-FR'; speechSynthesis.cancel(); speechSynthesis.speak(u);} });
+  function playFon(src, fallbackText){
+    if(!window.AgriAudio){
+      const a=new Audio(src);
+      a.play().catch(()=>{ if(fallbackText && 'speechSynthesis' in window){ const u=new SpeechSynthesisUtterance(fallbackText); u.lang='fr-FR'; speechSynthesis.cancel(); speechSynthesis.speak(u);} });
       return;
     }
-    window.AgriAudio.play(src, () => {
-      if (fallbackText) window.AgriAudio.speak(fallbackText, { lang: 'fr-FR', rate: 0.9 });
+    window.AgriAudio.play(src, ()=>{
+      if(fallbackText) window.AgriAudio.speak(fallbackText,{lang:'fr-FR',rate:0.9});
     });
   }
+  function playBienvenue(){ playFon(FON.bienvenue, "Bienvenue sur AgriVision. Touchez une zone colorée."); }
 
-  function playQueueFon(list, fallbackText) {
-    if (!window.AgriAudio) { playFon(list[0], fallbackText); return; }
-    // try queue, if files missing they will be skipped and fallback after?
-    window.AgriAudio.playQueue(list, null);
-  }
-
-  // Bienvenue — jouée uniquement sur clic utilisateur choix Fon
-  function playBienvenue() {
-    playFon(FON.bienvenue, "Bienvenue sur AgriVision. Touchez une zone colorée pour écouter les conseils.");
-  }
-
-  // Zone click from carte
-  function playForZone(zoneName, zoneProps) {
-    // zoneName like "Zone 1"
+  // Simplifié : 1 fichier par zone pour fiabilité jury
+  function playForZone(zoneName, zoneProps){
     let src = ZONE_TO_FON[zoneName] || null;
-    if (!src && zoneProps) {
-      if (zoneProps.risque === 'eleve') src = FON.zone_rouge;
-      else if (zoneProps.risque === 'modere') src = FON.zone_jaune;
-      else if (zoneProps.risque === 'faible') src = FON.zone_verte;
+    if(!src && zoneProps){
+      if(zoneProps.risque==='eleve') src=FON.zone_rouge;
+      else if(zoneProps.risque==='modere') src=FON.zone_jaune;
+      else if(zoneProps.risque==='faible') src=FON.zone_verte;
     }
-    if (!src) src = FON.toucher_zone;
-    // playlist suggestion: couleur + vérification
-    // For now play single color file; if we want richer, playQueue
-    const queue = [src];
-    // add a generic verification after color for context
-    if (src === FON.zone_rouge) queue.push(FON.verifier_sol, FON.controle_72h);
-    else if (src === FON.zone_jaune) queue.push(FON.observer_feuilles, FON.compost);
-    else if (src === FON.zone_verte) queue.push(FON.ne_pas_arroser, FON.ne_pas_engrais);
-    // Use queue if multiple, else single
-    if (queue.length > 1) playQueueFon(queue, null);
-    else playFon(src, null);
+    if(!src) src=FON.toucher_zone;
+    console.log('[Fon] playForZone', zoneName, zoneProps?.risque, '→', src);
+    playFon(src, null);
+  }
+  function playForActionCard(idx, fallbackText){
+    const map=[FON.zone_rouge, FON.zone_jaune, FON.zone_verte];
+    const src=map[idx]||FON.verifier_avant_agir;
+    console.log('[Fon] playForActionCard', idx, '→', src);
+    playFon(src, fallbackText); // simple 1 fichier, plus fiable que queue
   }
 
-  // Action card index 0,1,2 => mapping zone
-  function playForActionCard(idx, fallbackText) {
-    const map = [FON.zone_rouge, FON.zone_jaune, FON.zone_verte];
-    const src = map[idx] || FON.verifier_avant_agir;
-    const extras = {
-      0: [FON.verifier_sol, FON.paillage, FON.controle_72h],
-      1: [FON.observer_feuilles, FON.compost, FON.verifier_avant_agir],
-      2: [FON.ne_pas_arroser, FON.ne_pas_engrais]
-    }[idx] || [];
-    playQueueFon([src, ...extras], fallbackText);
-  }
-
-  function createSwitcher() {
-    if (document.getElementById('fon-lang-switcher')) return;
-    const wrap = document.createElement('div');
-    wrap.id = 'fon-lang-switcher';
-    wrap.setAttribute('role', 'group');
-    wrap.setAttribute('aria-label', 'Choix de la langue audio');
-    wrap.innerHTML = `
-      <span class="fon-switch-label">Audio :</span>
+  function createSwitcher(){
+    if(document.getElementById('fon-lang-switcher')) return;
+    const wrap=document.createElement('div');
+    wrap.id='fon-lang-switcher';
+    wrap.setAttribute('role','group');
+    wrap.setAttribute('aria-label','Choix de la langue audio');
+    wrap.innerHTML=`<span class="fon-switch-label">Audio :</span>
       <button type="button" data-lang="fr" class="fon-btn">Français</button>
       <button type="button" data-lang="fon" class="fon-btn">Fɔ̀ngbè</button>
-      <span class="fon-hint">Voix humaine</span>
-    `;
-    // Insert: try after nav, or before main, or in index-bar
-    const nav = document.querySelector('nav');
-    const main = document.querySelector('main');
-    const indexBar = document.querySelector('.index-bar');
-    if (nav && nav.parentNode) {
-      nav.insertAdjacentElement('afterend', wrap);
-    } else if (indexBar && indexBar.parentNode) {
-      indexBar.insertAdjacentElement('afterend', wrap);
-    } else if (main && main.parentNode) {
-      main.parentNode.insertBefore(wrap, main);
-    } else {
-      document.body.prepend(wrap);
-    }
-    // events
-    wrap.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const lang = btn.dataset.lang;
-        const prev = getLang();
+      <span class="fon-hint">Voix humaine</span>`;
+    const nav=document.querySelector('nav');
+    const main=document.querySelector('main');
+    if(nav && nav.parentNode) nav.insertAdjacentElement('afterend', wrap);
+    else if(main) main.parentNode.insertBefore(wrap, main);
+    else document.body.prepend(wrap);
+    wrap.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const lang=btn.dataset.lang;
+        const prev=getLang();
         setLang(lang);
-        if (lang === 'fon' && prev !== 'fon') {
-          // geste utilisateur valide => lancer bienvenue
-          setTimeout(playBienvenue, 120);
-        } else if (lang === 'fr') {
-          if (window.AgriAudio) window.AgriAudio.stop();
-          // optional confirm vocal français
-          // window.AgriAudio.speak("Audio en français", {lang:"fr-FR", rate:0.95});
-        }
+        if(lang==='fon' && prev!=='fon') setTimeout(playBienvenue, 120);
+        else if(lang==='fr' && window.AgriAudio) window.AgriAudio.stop();
       });
     });
     updateUI();
   }
-
-  function updateUI() {
-    const wrap = document.getElementById('fon-lang-switcher');
-    if (!wrap) return;
-    const lang = getLang();
-    wrap.querySelectorAll('button').forEach(b => {
-      b.classList.toggle('active', b.dataset.lang === lang);
-      b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false');
+  function updateUI(){
+    const wrap=document.getElementById('fon-lang-switcher');
+    if(!wrap) return;
+    const lang=getLang();
+    wrap.querySelectorAll('button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.lang===lang);
+      b.setAttribute('aria-pressed', b.dataset.lang===lang?'true':'false');
     });
-    wrap.setAttribute('data-current', lang);
+  }
+  function createGuidedButton(){
+    if(document.getElementById('fon-guided-btn')) return;
+    const host=document.querySelector('.result-grid')||document.querySelector('.grid-3')||document.querySelector('main');
+    if(!host) return;
+    const btn=document.createElement('button');
+    btn.id='fon-guided-btn';
+    btn.type='button';
+    btn.textContent='▶️ Visite guidée en Fɔ̀ngbè (2 min) — pour le jury';
+    btn.style.cssText='display:flex;align-items:center;gap:8px;margin:14px auto;padding:11px 16px;border:0;border-radius:999px;background:#123a20;color:#fff;font-weight:800;font-size:12px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.18)';
+    btn.onclick=()=>{
+      if(!isFon()){ alert("Passe d'abord en Fɔ̀ngbè en haut"); return; }
+      const seq=[FON.bienvenue, FON.toucher_zone, FON.zone_rouge, FON.verifier_sol, FON.zone_jaune, FON.observer_feuilles, FON.zone_verte, FON.ne_pas_arroser, FON.verifier_avant_agir, FON.contacter_equipe];
+      console.log('[Fon] visite guidée', seq);
+      if(window.AgriAudio) window.AgriAudio.playQueue(seq, ()=>console.log('[Fon] guidée finie'));
+      else seq.forEach((s,i)=> setTimeout(()=>playFon(s), i*2000));
+    };
+    const switcher=document.getElementById('fon-lang-switcher');
+    if(switcher && switcher.parentNode) switcher.insertAdjacentElement('afterend', btn);
+    else host.prepend(btn);
   }
 
-  // Public API
-  window.FonAudio = {
-    isFon,
-    getLang,
-    setLang,
-    playBienvenue,
-    playFon,
-    playForZone,
-    playForActionCard,
-    FILES: FON
-  };
+  window.FonAudio={ isFon, getLang, setLang, playBienvenue, playFon, playForZone, playForActionCard, FILES:FON };
 
-  // Init
-  function init() {
-    // set html attribute early for CSS
+  function init(){
     document.documentElement.setAttribute('data-audio-lang', getLang());
     createSwitcher();
     updateUI();
-
-    // Add CSS if not present
-    if (!document.getElementById('fon-switcher-style')) {
-      const s = document.createElement('style');
-      s.id = 'fon-switcher-style';
-      s.textContent = `
-#fon-lang-switcher{
- display:flex;align-items:center;gap:8px;flex-wrap:wrap;
- margin:10px 40px 0;padding:10px 14px;
- background:#f6f8f3;border:1px solid var(--line-strong, rgba(22,35,26,.14));
- border-radius:10px;font-size:12px
-}
+    if(!document.getElementById('fon-switcher-style')){
+      const s=document.createElement('style');
+      s.id='fon-switcher-style';
+      s.textContent=`#fon-lang-switcher{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 40px 0;padding:10px 14px;background:#f6f8f3;border:1px solid var(--line-strong, rgba(22,35,26,.14));border-radius:10px;font-size:12px}
 #fon-lang-switcher .fon-switch-label{font-weight:800;color:var(--forest-deep,#123a20)}
-#fon-lang-switcher .fon-btn{
- border:1px solid var(--line-strong, #c9d1c4);background:#fff;color:var(--ink-soft, #56604F);
- padding:7px 12px;border-radius:999px;font-weight:800;font-size:11.5px;cursor:pointer
-}
-#fon-lang-switcher .fon-btn.active{
- background:#123a20;color:#fff;border-color:#123a20;box-shadow:0 2px 8px rgba(18,58,32,.18)
-}
+#fon-lang-switcher .fon-btn{border:1px solid var(--line-strong, #c9d1c4);background:#fff;color:var(--ink-soft, #56604F);padding:7px 12px;border-radius:999px;font-weight:800;font-size:11.5px;cursor:pointer}
+#fon-lang-switcher .fon-btn.active{background:#123a20;color:#fff;border-color:#123a20;box-shadow:0 2px 8px rgba(18,58,32,.18)}
 #fon-lang-switcher .fon-hint{margin-left:auto;font-size:10px;color:var(--ink-soft,#56604F);font-weight:600}
-@media(max-width:760px){
- #fon-lang-switcher{margin:8px 16px 0;padding:9px 12px}
- #fon-lang-switcher .fon-hint{display:none}
-}
-`;
+@media(max-width:760px){#fon-lang-switcher{margin:8px 16px 0;padding:9px 12px}#fon-lang-switcher .fon-hint{display:none}}`;
       document.head.appendChild(s);
     }
-
-    // Monkey-patch existing listen handlers to respect Fon ===
-    // Carte: intercept #zone-listen click in capture phase
-    document.addEventListener('click', (e) => {
-      const btn = e.target.closest('#zone-listen, .popup-listen');
-      if (!btn) return;
-      if (!isFon()) return; // let default TTS run
+    // Intercepte Écouter sur carte
+    document.addEventListener('click', (e)=>{
+      const btn=e.target.closest('#zone-listen, .popup-listen');
+      if(!btn) return;
+      if(!isFon()) return;
       e.preventDefault(); e.stopImmediatePropagation();
-      // Retrieve active zone via global var or DOM
-      let zoneName = null, props = null;
-      try {
-        const t = document.getElementById('zone-title');
-        if (t) zoneName = t.textContent.trim();
-        // try to get props from window
-        if (window.ZONES_GEOJSON && zoneName) {
-          const f = window.ZONES_GEOJSON.features.find(fe => fe.properties.nom === zoneName);
-          if (f) props = f.properties;
+      let zoneName=null, props=null;
+      try{
+        const t=document.getElementById('zone-title');
+        if(t) zoneName=t.textContent.trim();
+        if(window.ZONES_GEOJSON && zoneName){
+          const f=window.ZONES_GEOJSON.features.find(fe=>fe.properties.nom===zoneName);
+          if(f) props=f.properties;
         }
-      } catch(_e){}
-      playForZone(zoneName || 'Zone 1', props);
+      }catch(_e){}
+      playForZone(zoneName||'Zone 1', props);
     }, true);
-
-    // Actions: intercept .action-listen
-    document.addEventListener('click', (e) => {
-      const btn = e.target.closest('.action-listen, .zone-listen-btn');
-      if (!btn) return;
-      if (!document.querySelector('.action-card')) return; // only on actions page, but safe to run everywhere
-      if (!isFon()) return;
+    // Intercepte Écouter sur plan d'action
+    document.addEventListener('click', (e)=>{
+      const btn=e.target.closest('.action-listen, .zone-listen-btn');
+      if(!btn || !document.querySelector('.action-card')) return;
+      if(!isFon()) return;
       e.preventDefault(); e.stopImmediatePropagation();
-      const idx = parseInt(btn.dataset.card || btn.getAttribute('data-card') || '0', 10);
-      // fallback text for error case
-      const card = btn.closest('.action-card');
-      let fallback = null;
-      if (card) {
-        const title = card.querySelector('h3')?.textContent || 'Zone';
-        const lines = [...card.querySelectorAll('li')].map(x => x.textContent).join('. ');
-        fallback = `${title}. ${lines}`;
+      const idx=parseInt(btn.dataset.card||btn.getAttribute('data-card')||'0',10);
+      const card=btn.closest('.action-card');
+      let fallback=null;
+      if(card){
+        const title=card.querySelector('h3')?.textContent||'Zone';
+        const lines=[...card.querySelectorAll('li')].map(x=>x.textContent).join('. ');
+        fallback=`${title}. ${lines}`;
       }
       playForActionCard(idx, fallback);
     }, true);
+    // Auto-play quand on clique sur la carte/filtre (geste = autoplay autorisé)
+    document.addEventListener('click', (e)=>{
+      if(!isFon()) return;
+      const isMapClick=e.target.closest('#map')||e.target.closest('.zone-filter');
+      if(!isMapClick) return;
+      if(e.target.closest('#zone-listen, .popup-listen, .action-listen')) return;
+      setTimeout(()=>{
+        const t=document.getElementById('zone-title');
+        if(!t || !t.textContent.trim()) return;
+        const zoneName=t.textContent.trim();
+        if(zoneName===window._lastFonZone) return;
+        window._lastFonZone=zoneName;
+        let props=null;
+        try{ if(window.ZONES_GEOJSON){ const f=window.ZONES_GEOJSON.features.find(fe=>fe.properties.nom===zoneName); if(f) props=f.properties; } }catch(_e){}
+        console.log('[Fon] auto-play zone', zoneName);
+        playForZone(zoneName, props);
+      }, 400);
+    }, true);
 
-    // Index bienvenue hint: if on index and Fon already selected, show a small play button?
-    // We don't autoplay on load (browsers block), but we add a banner hint
-    if (isFon() && location.pathname.endsWith('index.html') || location.pathname === '/' || location.pathname.endsWith('/')) {
-      // inject subtle call-to-action near hero if not already
-      const hero = document.querySelector('.hero-final');
-      if (hero && !document.getElementById('fon-welcome-hint')) {
+    // Visite guidée pour jury
+    if(location.pathname.includes('resultats')||location.pathname.includes('actions')||location.pathname==='/'||location.pathname.includes('index.html')||location.pathname.endsWith('/')){
+      createGuidedButton();
+      window.addEventListener('agrivision:lang', ()=>{ if(isFon()) createGuidedButton(); });
+    }
+    // Carte : ajoute un bouton discret pour 02_toucher_zone si en Fon
+    if(location.pathname.includes('resultats')){
+      const host = document.querySelector('.reading-steps');
+      if(host && !document.getElementById('fon-carte-hint')){
         const hint = document.createElement('button');
-        hint.id = 'fon-welcome-hint';
-        hint.type = 'button';
-        hint.textContent = '▶ Écouter la bienvenue en Fɔ̀ngbè';
-        hint.style.cssText = 'margin-top:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;padding:8px 12px;border-radius:999px;font-weight:800;font-size:11px;cursor:pointer';
+        hint.id='fon-carte-hint';
+        hint.type='button';
+        hint.textContent='🔊 Écouter : touchez une zone (Fɔ̀ngbè)';
+        hint.style.cssText='display:block;margin:10px auto;padding:8px 12px;border:1px solid var(--line-strong);border-radius:999px;background:#f6f8f3;color:var(--forest-deep);font-weight:700;font-size:11px;cursor:pointer';
+        hint.onclick=()=> playFon(FON.toucher_zone, "Touchez une partie rouge, jaune ou verte");
+        host.insertAdjacentElement('afterend', hint);
+        // Auto-play 02 après premier clic sur la page si en Fon (accueil->carte vient d'un clic = geste)
+        if(isFon()){
+          const once = ()=>{ playFon(FON.toucher_zone); document.removeEventListener('click', once); };
+          document.addEventListener('click', once, {once:true});
+        }
+      }
+    }
+    // À propos : ajoute bouton Fɔ̀ngbè sur contact (15)
+    if(location.pathname.includes('apropos')){
+      const contactCard = document.querySelector('.contact-card') || document.querySelector('.contact-card-new');
+      if(contactCard && !document.getElementById('fon-contact-btn')){
+        const btn=document.createElement('button');
+        btn.id='fon-contact-btn';
+        btn.type='button';
+        btn.textContent='🔊 Écouter le contact en Fɔ̀ngbè';
+        btn.style.cssText='margin-top:10px;padding:8px 12px;border:1px solid var(--forest);border-radius:8px;background:#123a20;color:#fff;font-weight:700;font-size:11px;cursor:pointer';
+        btn.onclick=()=> playFon(FON.contacter_equipe, "Contact AgriVision +229 01 98 41 92 40");
+        contactCard.appendChild(btn);
+      }
+    }
+    // Assistant IA : en Fon, les cartes de glossaire jouent le Fon correspondant
+    if(location.pathname.includes('ia.html')||location.pathname.includes('ia')){
+      const fonMapAssistant = {
+        'VARI': FON.zone_rouge, // on réutilise zone rouge pour VARI
+        'GSD': FON.verifier_sol,
+        'Orthophoto': FON.toucher_zone,
+        'Vérification': FON.verifier_avant_agir,
+        'Paillage': FON.paillage,
+        'Compost': FON.compost,
+        'Légumineuses': FON.compost,
+        'Produit bio': FON.ne_pas_engrais
+      };
+      document.querySelectorAll('.learn-card').forEach(card=>{
+        const key = card.querySelector('b')?.textContent.trim();
+        if(!key || !fonMapAssistant[key]) return;
+        // Ajoute un petit badge Fon
+        if(!card.querySelector('.fon-badge')){
+          const badge=document.createElement('span');
+          badge.className='fon-badge';
+          badge.textContent='🔊 Fɔ̀ngbè';
+          badge.style.cssText='float:right;font-size:9px;background:#123a20;color:#fff;padding:2px 6px;border-radius:999px;font-weight:700';
+          card.appendChild(badge);
+        }
+        // Intercepte clic en Fon
+        card.addEventListener('click', (e)=>{
+          if(!isFon()) return;
+          e.preventDefault(); e.stopImmediatePropagation();
+          const src=fonMapAssistant[key];
+          console.log('[Fon] assistant learn', key, '→', src);
+          playFon(src);
+          // Lance aussi la question texte en fallback pour l'historique
+          const q=card.dataset.question;
+          if(q){
+            const input=document.getElementById('chat-input');
+            if(input){ input.value=q; }
+          }
+        }, true);
+      });
+    }
+    // Hint bienvenue sur accueil
+    const isIndex = location.pathname.endsWith('index.html')||location.pathname==='/'||location.pathname.endsWith('/');
+    if(isFon() && isIndex){
+      const hero=document.querySelector('.hero-final');
+      if(hero && !document.getElementById('fon-welcome-hint')){
+        const hint=document.createElement('button');
+        hint.id='fon-welcome-hint';
+        hint.type='button';
+        hint.textContent='▶ Écouter la bienvenue en Fɔ̀ngbè';
+        hint.style.cssText='margin-top:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;padding:8px 12px;border-radius:999px;font-weight:800;font-size:11px;cursor:pointer';
         hint.addEventListener('click', playBienvenue);
-        // append after hero buttons
-        const btnRow = hero.querySelector('div[style*="display:flex"]');
-        if (btnRow) btnRow.appendChild(hint);
+        const btnRow=hero.querySelector('div[style*="display:flex"]');
+        if(btnRow) btnRow.appendChild(hint);
         else hero.appendChild(hint);
       }
     }
   }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
   else init();
-
-  // Re-init hint when lang changes
-  window.addEventListener('agrivision:lang', () => {
-    if (isFon()) {
-      // ensure hint exists on index
-      if (!document.getElementById('fon-welcome-hint') && (location.pathname === '/' || location.pathname.endsWith('index.html') || location.pathname === '/index.html')) {
-        setTimeout(init, 100);
-      }
+  window.addEventListener('agrivision:lang', ()=>{
+    if(isFon()){
+      const isIndex = location.pathname.endsWith('index.html')||location.pathname==='/'||location.pathname.endsWith('/');
+      if(!document.getElementById('fon-welcome-hint') && isIndex) setTimeout(init, 100);
     }
   });
 })();
