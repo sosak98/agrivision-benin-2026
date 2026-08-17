@@ -1,6 +1,6 @@
 /* AgriVision — audio Fɔ̀ngbè v11
    15 fichiers humains mono 16kHz dans assets/audio/fon/*.opus
-   Sélecteur Français | Fɔ̀ngbè, bienvenue au clic, auto-play zone, visite guidée jury
+   Sélecteur Français | Fɔ̀ngbè, bienvenue au clic, auto-play zone, audio Fɔ̀ngbè
 */
 (function () {
   const STORAGE_KEY = 'agrivision_audio_lang';
@@ -47,7 +47,7 @@
   }
   function playBienvenue(){ playFon(FON.bienvenue, "Bienvenue sur AgriVision. Touchez une zone colorée."); }
 
-  // Simplifié : 1 fichier par zone pour fiabilité jury
+  // Détaillé : couleur + 2 conseils pour être utile
   function playForZone(zoneName, zoneProps){
     let src = ZONE_TO_FON[zoneName] || null;
     if(!src && zoneProps){
@@ -57,13 +57,21 @@
     }
     if(!src) src=FON.toucher_zone;
     console.log('[Fon] playForZone', zoneName, zoneProps?.risque, '→', src);
-    playFon(src, null);
+    const queue=[src];
+    if(src===FON.zone_rouge) queue.push(FON.verifier_sol, FON.controle_72h);
+    else if(src===FON.zone_jaune) queue.push(FON.observer_feuilles, FON.compost);
+    else if(src===FON.zone_verte) queue.push(FON.ne_pas_arroser, FON.ne_pas_engrais);
+    if(queue.length>1 && window.AgriAudio && window.AgriAudio.playQueue) window.AgriAudio.playQueue(queue);
+    else playFon(src, null);
   }
   function playForActionCard(idx, fallbackText){
     const map=[FON.zone_rouge, FON.zone_jaune, FON.zone_verte];
     const src=map[idx]||FON.verifier_avant_agir;
-    console.log('[Fon] playForActionCard', idx, '→', src);
-    playFon(src, fallbackText); // simple 1 fichier, plus fiable que queue
+    const extras={0:[FON.verifier_sol, FON.paillage, FON.controle_72h],1:[FON.observer_feuilles, FON.compost, FON.verifier_avant_agir],2:[FON.ne_pas_arroser, FON.ne_pas_engrais]}[idx]||[];
+    console.log('[Fon] playForActionCard', idx, '→', src, '+', extras);
+    const queue=[src, ...extras];
+    if(window.AgriAudio && window.AgriAudio.playQueue) window.AgriAudio.playQueue(queue);
+    else playFon(src, fallbackText);
   }
 
   function createSwitcher(){
@@ -100,26 +108,6 @@
       b.classList.toggle('active', b.dataset.lang===lang);
       b.setAttribute('aria-pressed', b.dataset.lang===lang?'true':'false');
     });
-  }
-  function createGuidedButton(){
-    if(document.getElementById('fon-guided-btn')) return;
-    const host=document.querySelector('.result-grid')||document.querySelector('.grid-3')||document.querySelector('main');
-    if(!host) return;
-    const btn=document.createElement('button');
-    btn.id='fon-guided-btn';
-    btn.type='button';
-    btn.textContent='▶️ Visite guidée en Fɔ̀ngbè (2 min) — pour le jury';
-    btn.style.cssText='display:flex;align-items:center;gap:8px;margin:14px auto;padding:11px 16px;border:0;border-radius:999px;background:#123a20;color:#fff;font-weight:800;font-size:12px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.18)';
-    btn.onclick=()=>{
-      if(!isFon()){ alert("Passe d'abord en Fɔ̀ngbè en haut"); return; }
-      const seq=[FON.bienvenue, FON.toucher_zone, FON.zone_rouge, FON.verifier_sol, FON.zone_jaune, FON.observer_feuilles, FON.zone_verte, FON.ne_pas_arroser, FON.verifier_avant_agir, FON.contacter_equipe];
-      console.log('[Fon] visite guidée', seq);
-      if(window.AgriAudio) window.AgriAudio.playQueue(seq, ()=>console.log('[Fon] guidée finie'));
-      else seq.forEach((s,i)=> setTimeout(()=>playFon(s), i*2000));
-    };
-    const switcher=document.getElementById('fon-lang-switcher');
-    if(switcher && switcher.parentNode) switcher.insertAdjacentElement('afterend', btn);
-    else host.prepend(btn);
   }
 
   window.FonAudio={ isFon, getLang, setLang, playBienvenue, playFon, playForZone, playForActionCard, FILES:FON };
@@ -191,10 +179,8 @@
       }, 400);
     }, true);
 
-    // Visite guidée pour jury
     if(location.pathname.includes('resultats')||location.pathname.includes('actions')||location.pathname==='/'||location.pathname.includes('index.html')||location.pathname.endsWith('/')){
-      createGuidedButton();
-      window.addEventListener('agrivision:lang', ()=>{ if(isFon()) createGuidedButton(); });
+
     }
     // Carte : ajoute un bouton discret pour 02_toucher_zone si en Fon
     if(location.pathname.includes('resultats')){
