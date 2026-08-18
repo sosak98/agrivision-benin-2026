@@ -45,7 +45,11 @@
       if(fallbackText) window.AgriAudio.speak(fallbackText,{lang:'fr-FR',rate:0.9});
     });
   }
-  function playBienvenue(){ playFon(FON.bienvenue, "Bienvenue sur AgriVision. Touchez une zone colorée."); }
+  function playBienvenue(){
+    if(isFon()) playFon(FON.bienvenue, "Bienvenue sur AgriVision. Touchez une zone colorée.");
+    else if(window.AgriAudio) window.AgriAudio.speak("Bienvenue sur AgriVision Bénin. Cliquez sur l'option Carte pour voir vos recommandations.", {lang:'fr-FR', rate:0.9});
+    else if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance("Bienvenue sur AgriVision Bénin. Cliquez sur l'option Carte pour voir vos recommandations."); u.lang='fr-FR'; speechSynthesis.cancel(); speechSynthesis.speak(u); }
+  }
 
   // Détaillé : couleur + 2 conseils pour être utile
   function playForZone(zoneName, zoneProps){
@@ -95,6 +99,7 @@
         const prev=getLang();
         setLang(lang);
         if(lang==='fon' && prev!=='fon') setTimeout(playBienvenue, 120);
+        else if(lang==='fr' && prev!=='fr') setTimeout(playBienvenue, 120);
         else if(lang==='fr' && window.AgriAudio) window.AgriAudio.stop();
       });
     });

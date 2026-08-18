@@ -17,18 +17,17 @@
 
   const SUPABASE_URL = 'https://vohgjznludhwsinervkm.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_rfg-pzSClJ0pax2lQ24KVQ_E9gfZKqi';
-  // Charge depuis Supabase (vrai backend) puis fallback sur data/farmers.json pour offline
+  // Charge depuis Supabase ET data/farmers.json en parallèle, merge (offline-first)
   async function loadStaticFarmers(){
-    // 1. Essaie Supabase d'abord (vrai base)
+    const map={};
+    // 1. Charge Supabase (si dispo)
     try{
       const r = await fetch(SUPABASE_URL + '/rest/v1/farmers?select=*', {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
       if(r.ok){
         const farmers = await r.json();
-        const map={};
         for(const f of farmers){
-          // Pour chaque farmer, charge sa mission
           try{
             const mr = await fetch(SUPABASE_URL + '/rest/v1/missions?farmer_id=eq.' + encodeURIComponent(f.id) + '&select=*&order=created_at.desc&limit=1', {
               headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
@@ -37,37 +36,31 @@
               const missions = await mr.json();
               const m = missions[0];
               if(m){
-                // m.mission et m.geojson sont déjà JSON (jsonb)
                 const mission = typeof m.mission === 'string' ? JSON.parse(m.mission) : m.mission;
                 const zones = typeof m.geojson === 'string' ? JSON.parse(m.geojson) : m.geojson;
-                // Si zones est un FeatureCollection complet, on l'utilise, sinon fallback
                 const zonesFC = zones && zones.type ? zones : {type:"FeatureCollection",features:[]};
                 map[f.id] = { mission: mission.derniere_mission ? mission : {derniere_mission: mission}, zones: zonesFC, meta: {nom: f.nom, telephone: f.telephone, parcelle: f.parcelle} };
-                // Normalise mission si elle est déjà au bon format
-                if(!map[f.id].mission.derniere_mission && map[f.id].mission.derniere_mission===undefined){
-                  // Si mission est déjà la bonne structure
-                }
               } else {
-                // Pas de mission, on met un placeholder
                 map[f.id] = { mission: {derniere_mission:{parcelle:f.parcelle, hectares_analyses:0, sante_globale:0}}, zones: {type:"FeatureCollection",features:[]}, meta: {nom:f.nom, telephone:f.telephone, parcelle:f.parcelle} };
               }
             }
           }catch(e){ console.warn('Supabase mission fetch failed', e); }
         }
-        if(Object.keys(map).length>0) return map;
+      } else {
+        console.warn('Supabase farmers not ok', r.status, await r.text());
       }
     }catch(e){ console.warn('Supabase farmers fetch failed', e); }
-    // 2. Fallback : data/farmers.json (offline, démo)
+    // 2. Toujours charge aussi le fallback statique (offline, démo) et merge — ne pas écraser Supabase si déjà là
     try{
       const r = await fetch('data/farmers.json', {cache:'no-store'});
-      if(!r.ok) return {};
-      const j = await r.json();
-      const map={};
-      (j.farmers||[]).forEach(f=>{
-        map[f.id] = { mission: f.mission, zones: f.zones, meta: {nom:f.nom, telephone:f.telephone, parcelle:f.parcelle} };
-      });
-      return map;
-    }catch(e){ return {}; }
+      if(r.ok){
+        const j = await r.json();
+        (j.farmers||[]).forEach(f=>{
+          if(!map[f.id]) map[f.id] = { mission: f.mission, zones: f.zones, meta: {nom:f.nom, telephone:f.telephone, parcelle:f.parcelle} };
+        });
+      }
+    }catch(e){ console.warn('Fallback farmers.json failed', e); }
+    return map;
   }
 
   async function init(){
@@ -104,6 +97,9 @@
         // Optionnel : restaure le dernier agriculteur vu
       }
     }
+
+    // Affiche la liste admin si on est sur equipe.html
+    renderAdminList(all);
 
     // Expose pour l'import QGIS : quand on importe, on sauve sous un nouvel id
     window.AgrivisionSaveFarmer = function(id, nom, telephone, mission, zones){
@@ -142,12 +138,16 @@
   }
 
   function renderSelector(all){
-    // Uniquement sur l'accueil et si on est pas déjà en ?farmer=
+    // Visible uniquement dans l'espace équipe (admin) pour ne pas exposer aux paysans
+    const isAdmin = (location.pathname.includes('equipe.html') || sessionStorage.getItem('agrivision_tech')==='1');
+    if(!isAdmin) return;
+    // Uniquement sur l'accueil admin et si on est pas déjà en ?farmer=
     if(location.search.includes(PARAM+'=')) return;
-    const host = document.querySelector('.hero-final') || document.querySelector('main');
+    // Cherche un hôte dans la page équipe
+    let host = document.querySelector('#tech-panel') || document.querySelector('.hero-final') || document.querySelector('main');
     if(!host || document.getElementById('farmer-selector')) return;
     const ids = Object.keys(all);
-    if(ids.length <= 1) return; // pas besoin si 1 seul
+    if(ids.length < 1) return;
     const wrap = document.createElement('div');
     wrap.id='farmer-selector';
     wrap.style.cssText='margin:16px 0;padding:12px;background:#fff;border:1px solid var(--line-strong);border-radius:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px';
@@ -171,12 +171,30 @@
     const qrLink=wrap.querySelector('#farmer-qr-link');
     function updQr(){
       const v=sel.value || 'demo';
-      const url = location.origin + location.pathname + '?farmer=' + encodeURIComponent(v);
+      const url = location.origin + location.pathname.replace('equipe.html','index.html') + '?farmer=' + encodeURIComponent(v);
       qrLink.href='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(url);
     }
     sel.addEventListener('change', updQr);
     updQr();
     host.parentNode.insertBefore(wrap, host.nextSibling);
+  }
+  function renderAdminList(all){
+    const list=document.getElementById('farmer-admin-list');
+    if(!list) return;
+    list.innerHTML='';
+    Object.entries(all).forEach(([id, data])=>{
+      const url = location.origin + location.pathname.replace('equipe.html','index.html') + '?farmer=' + encodeURIComponent(id);
+      const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(url);
+      const div=document.createElement('div');
+      div.style.cssText='display:flex;gap:10px;align-items:center;padding:10px;background:#fff;border:1px solid var(--line-strong);border-radius:10px';
+      div.innerHTML=`<img src="${qrUrl}" style="width:60px;height:60px;border-radius:6px;border:1px solid #eee"><div style="flex:1"><b>${data.meta.nom}</b><br><span style="font-size:11px;color:#56604F">${data.mission.derniere_mission.hectares_analyses} ha — ${data.mission.derniere_mission.parcelle}</span><br><a href="${url}" target="_blank" style="font-size:11px;word-break:break-all;color:#123a20">${url}</a></div><button type="button" style="padding:6px 10px;border:0;background:#123a20;color:#fff;border-radius:999px;font-size:10px;cursor:pointer" onclick="navigator.clipboard.writeText('${url}')">Copier</button>`;
+      list.appendChild(div);
+    });
+    // Update QR links for Amadou/Fatou
+    const a1=document.getElementById('farmer-qr-amadou');
+    const a2=document.getElementById('farmer-qr-fatou');
+    if(a1) a1.href='https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(location.origin + '/index.html?farmer=amadou');
+    if(a2) a2.href='https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(location.origin + '/index.html?farmer=fatou');
   }
 
   // Lance après que data.js ait chargé
