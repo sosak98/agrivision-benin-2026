@@ -1,0 +1,74 @@
+{
+  "farmers": [
+    {
+      "id": "amadou",
+      "nom": "Amadou - Champ Nord",
+      "telephone": "01 98 41 92 40",
+      "parcelle": "Champ Nord - 3,1 ha",
+      "mission": {
+        "derniere_mission": {
+          "date": "2026-08-15",
+          "date_traitement": "2026-08-16",
+          "parcelle": "Amadou - Champ Nord",
+          "hectares_analyses": 3.1,
+          "parcelles_couvertes": 1,
+          "zones_critiques": 1,
+          "zones_surveillance": 1,
+          "sante_globale": 58,
+          "culture": "Maïs",
+          "photos": 62,
+          "photos_alignees": 62,
+          "altitude_m": 60,
+          "gsd_cm": 1.8,
+          "points_denses": 3500000,
+          "georeferencement": "GPS embarqué, sans GCP",
+          "erreur_m": 0.35
+        },
+        "repartition": { "saine": 10.0, "stress_leger": 45.0, "stress_severe": 45.0 }
+      },
+      "zones": {
+        "type": "FeatureCollection",
+        "features": [
+          {"type":"Feature","properties":{"nom":"Zone 1","surface_ha":1.4,"vari":0.32,"risque":"eleve","causes":["Manque d'eau"],"recommandations":["Vérifier sol","Paillage","Contrôle 72h"],"priorite":"haute","delai":"24 h","confiance":"élevée","verification":"Toucher terre"},"geometry":{"type":"Polygon","coordinates":[[[2.329,6.396],[2.330,6.396],[2.330,6.397],[2.329,6.397],[2.329,6.396]]]}},
+          {"type":"Feature","properties":{"nom":"Zone 2","surface_ha":1.2,"vari":0.52,"risque":"modere","causes":["Carence"],"recommandations":["Observer feuilles","Compost","Vérifier avant agir"],"priorite":"moyenne","delai":"72 h","confiance":"moyenne","verification":"Observer feuilles"},"geometry":{"type":"Polygon","coordinates":[[[2.331,6.396],[2.332,6.396],[2.332,6.397],[2.331,6.397],[2.331,6.396]]]}},
+          {"type":"Feature","properties":{"nom":"Zone 3","surface_ha":0.5,"vari":0.72,"risque":"faible","causes":[],"recommandations":["Maintenir","Garder couvert","Surveillance"],"priorite":"faible","delai":"prochain vol","confiance":"élevée","verification":"Surveillance"},"geometry":{"type":"Polygon","coordinates":[[[2.333,6.396],[2.334,6.396],[2.334,6.397],[2.333,6.397],[2.333,6.396]]]}} 
+        ]
+      }
+    },
+    {
+      "id": "fatou",
+      "nom": "Fatou - Bas-fond",
+      "telephone": "01 97 22 33 44",
+      "parcelle": "Bas-fond - 5,3 ha",
+      "mission": {
+        "derniere_mission": {
+          "date": "2026-08-14",
+          "date_traitement": "2026-08-15",
+          "parcelle": "Fatou - Bas-fond",
+          "hectares_analyses": 5.3,
+          "parcelles_couvertes": 1,
+          "zones_critiques": 0,
+          "zones_surveillance": 2,
+          "sante_globale": 65,
+          "culture": "Riz",
+          "photos": 75,
+          "photos_alignees": 75,
+          "altitude_m": 60,
+          "gsd_cm": 1.8,
+          "points_denses": 4200000,
+          "georeferencement": "GPS embarqué, sans GCP",
+          "erreur_m": 0.35
+        },
+        "repartition": { "saine": 20.0, "stress_leger": 50.0, "stress_severe": 30.0 }
+      },
+      "zones": {
+        "type": "FeatureCollection",
+        "features": [
+          {"type":"Feature","properties":{"nom":"Zone 1","surface_ha":2.0,"vari":0.38,"risque":"eleve","causes":["Stress hydrique"],"recommandations":["Vérifier sol","Irriguer ciblé","Paillage"],"priorite":"haute","delai":"24 h","confiance":"élevée","verification":"Toucher terre"},"geometry":{"type":"Polygon","coordinates":[[[2.329,6.396],[2.330,6.396],[2.330,6.397],[2.329,6.397],[2.329,6.396]]]}},
+          {"type":"Feature","properties":{"nom":"Zone 2","surface_ha":2.5,"vari":0.58,"risque":"modere","causes":["Carence légère"],"recommandations":["Analyse sol","Compost"],"priorite":"moyenne","delai":"72 h","confiance":"moyenne","verification":"Observer"},"geometry":{"type":"Polygon","coordinates":[[[2.331,6.396],[2.332,6.396],[2.332,6.397],[2.331,6.397],[2.331,6.396]]]}},
+          {"type":"Feature","properties":{"nom":"Zone 3","surface_ha":0.8,"vari":0.78,"risque":"faible","causes":[],"recommandations":["Maintenir"],"priorite":"faible","delai":"prochain vol","confiance":"élevée","verification":"Surveillance"},"geometry":{"type":"Polygon","coordinates":[[[2.333,6.396],[2.334,6.396],[2.334,6.397],[2.333,6.397],[2.333,6.396]]]}} 
+        ]
+      }
+    }
+  ]
+}
