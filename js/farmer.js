@@ -17,6 +17,10 @@
 
   const SUPABASE_URL = 'https://vohgjznludhwsinervkm.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_rfg-pzSClJ0pax2lQ24KVQ_E9gfZKqi';
+
+  // Auto Groq pour tous les appareils (v23 demo) — sera retiré après concours
+  if(!localStorage.getItem('agrivision_groq_key')) localStorage.setItem('agrivision_groq_key', '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');
+
   // Charge depuis Supabase ET data/farmers.json en parallèle, merge (offline-first)
   async function loadStaticFarmers(){
     const map={};
