@@ -18,8 +18,6 @@
   const SUPABASE_URL = 'https://vohgjznludhwsinervkm.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_rfg-pzSClJ0pax2lQ24KVQ_E9gfZKqi';
 
-  // Auto Groq pour tous les appareils (v23 demo) — sera retiré après concours
-  if(!localStorage.getItem('agrivision_groq_key')) localStorage.setItem('agrivision_groq_key', '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');
 
   // Charge depuis Supabase ET data/farmers.json en parallèle, merge (offline-first)
   async function loadStaticFarmers(){
@@ -68,6 +66,23 @@
   }
 
   async function init(){
+    // Récupère la clé Groq depuis Supabase pour tous les appareils (une fois pour tous)
+    try{
+      if(!localStorage.getItem('agrivision_groq_key')){
+        const gr = await fetch(SUPABASE_URL + '/rest/v1/app_config?key=eq.groq_key&select=value', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        });
+        if(gr.ok){
+          const gj = await gr.json();
+          const gval = gj[0]?.value;
+          if(gval && gval.length>15) {
+            localStorage.setItem('agrivision_groq_key', gval);
+            console.log('Groq key auto-set from Supabase');
+          }
+        }
+      }
+    }catch(e){ console.warn('Groq auto-fetch failed', e); }
+
     const paramId = getParam();
     const staticFarmers = await loadStaticFarmers();
     const localFarmers = loadLocalFarmers();
