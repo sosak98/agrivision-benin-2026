@@ -91,7 +91,22 @@
   })();
 
   async function init(){
-    // Groq maintenant en dur dans assistant-local.js (plus de fetch Supabase)
+    // Récupère la clé Groq depuis Supabase pour tous les appareils
+    try{
+      if(!localStorage.getItem('agrivision_groq_key')){
+        const gr = await fetch(SUPABASE_URL + '/rest/v1/app_config?key=eq.groq_key&select=value', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        });
+        if(gr.ok){
+          const gj = await gr.json();
+          const gval = gj[0]?.value;
+          if(gval && gval.length>15) {
+            localStorage.setItem('agrivision_groq_key', gval);
+            console.log('Groq key auto-set from Supabase');
+          }
+        }
+      }
+    }catch(e){ console.warn('Groq auto-fetch failed', e); }
 
     const paramId = getParam();
     // Groq retiré (offline only)
