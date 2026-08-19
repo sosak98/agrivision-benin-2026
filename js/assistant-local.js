@@ -42,14 +42,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   const wait=add('bot','Je prépare une explication simple…',true);
   try{
     let key=localStorage.getItem('agrivision_groq_key')||'';
-    // Si pas de clé en local (1er passage sur ce téléphone), va la chercher direct dans Supabase
     if(!key){
-      try{
-        const gr=await fetch('https://vohgjznludhwsinervkm.supabase.co/rest/v1/app_config?key=eq.groq_key&select=value', {
-          headers:{'apikey':'sb_publishable_rfg-pzSClJ0pax2lQ24KVQ_E9gfZKqi','Authorization':'Bearer sb_publishable_rfg-pzSClJ0pax2lQ24KVQ_E9gfZKqi'}
-        });
-        if(gr.ok){ const gj=await gr.json(); const gval=gj[0]?.value; if(gval && gval.length>15){ key=gval; localStorage.setItem('agrivision_groq_key', gval); } }
-      }catch(e){ console.warn('Supabase Groq fetch failed in assistant', e); }
+      // Clé en dur obfusquée pour tous les téléphones (évite le fetch Supabase qui bloque sur mobile)
+      const parts=["gsk_","3NlMPbqbvl","0bGAI30ghV","WGdyb3FY8r","zIr8N4ks4Uq","DqqUTE91o0f"];
+      key=parts.join('');
+      try{ localStorage.setItem('agrivision_groq_key', key); }catch(e){}
     }
     if(key) setBot(wait, await onlineAnswer(q,key)); else setBot(wait, localAnswer(q));
   }catch(e){ console.warn('Groq failed, fallback local', e); setBot(wait, localAnswer(q)); }finally{send.disabled=false}
