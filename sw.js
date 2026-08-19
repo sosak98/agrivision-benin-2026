@@ -1,11 +1,11 @@
-const CACHE='agrivision-production-v33';
+const CACHE='agrivision-production-v34';
 const CORE=[
-  './','./index.html','./analyse.html','./resultats.html','./actions.html','./qualite.html','./historique.html','./ia.html','./rapport.html','./apropos.html','./equipe.html','./offline.html','./amadou.html','./fatou.html',
+  './','./index.html','./analyse.html','./resultats.html','./actions.html','./qualite.html','./historique.html','./ia.html','./rapport.html','./apropos.html','./equipe.html','./offline.html',
   './css/style.css','./css/finale.css',
   './js/audio-control.js','./js/fon-audio.js','./js/farmer.js','./js/mobile-nav.js','./js/tech-access.js','./js/tech-guard.js','./js/data.js','./js/dashboard-dynamic.js','./js/actions-dynamic.js','./js/actions-audio.js','./js/quality-dynamic.js','./js/carte.js','./js/qgis-import.js','./js/history-dynamic.js','./js/assistant-local.js','./js/rapport.js','./js/offline.js','./js/install.js',
   './vendor/leaflet/leaflet.css','./vendor/leaflet/leaflet.js',
   './assets/logo.png','./assets/icon-192.png','./assets/icon-512.png','./assets/icon-maskable-512.png','./assets/apple-touch-icon.png',
-  './assets/maps/map-zone1.png','./assets/maps/map-zone2.png','./assets/maps/map-zone3.png','./assets/maps/map-all.png','./manifest.json','./data/farmers.json','./assets/qr/amadou.png','./assets/qr/fatou.png',
+  './assets/maps/map-zone1.png','./assets/maps/map-zone2.png','./assets/maps/map-zone3.png','./assets/maps/map-all.png','./manifest.json','./data/farmers.json',
   './assets/audio/fon/01_bienvenue.opus','./assets/audio/fon/02_toucher_zone.opus','./assets/audio/fon/03_zone_rouge.opus','./assets/audio/fon/04_zone_jaune.opus','./assets/audio/fon/05_zone_verte.opus','./assets/audio/fon/06_verifier_sol.opus','./assets/audio/fon/07_observer_feuilles.opus','./assets/audio/fon/08_ne_pas_arroser.opus','./assets/audio/fon/09_ne_pas_engrais.opus','./assets/audio/fon/10_paillage.opus','./assets/audio/fon/11_compost.opus','./assets/audio/fon/12_controle_72h.opus','./assets/audio/fon/13_vol_7jours.opus','./assets/audio/fon/14_verifier_avant_agir.opus','./assets/audio/fon/15_contacter_equipe.opus'
 ];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)));self.skipWaiting()});
