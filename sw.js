@@ -1,6 +1,6 @@
-const CACHE='agrivision-production-v27';
+const CACHE='agrivision-production-v28';
 const CORE=[
-  './','./index.html','./analyse.html','./resultats.html','./actions.html','./qualite.html','./historique.html','./ia.html','./rapport.html','./apropos.html','./equipe.html','./offline.html',
+  './','./index.html','./analyse.html','./resultats.html','./actions.html','./qualite.html','./historique.html','./ia.html','./rapport.html','./apropos.html','./equipe.html','./offline.html','./amadou.html','./fatou.html',
   './css/style.css','./css/finale.css',
   './js/audio-control.js','./js/fon-audio.js','./js/farmer.js','./js/mobile-nav.js','./js/tech-access.js','./js/tech-guard.js','./js/data.js','./js/dashboard-dynamic.js','./js/actions-dynamic.js','./js/actions-audio.js','./js/quality-dynamic.js','./js/carte.js','./js/qgis-import.js','./js/history-dynamic.js','./js/assistant-local.js','./js/rapport.js','./js/offline.js','./js/install.js',
   './vendor/leaflet/leaflet.css','./vendor/leaflet/leaflet.js',
