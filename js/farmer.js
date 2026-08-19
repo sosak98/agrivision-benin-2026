@@ -17,6 +17,10 @@
 
   const SUPABASE_URL = 'https://vohgjznludhwsinervkm.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_rfg-pzSClJ0pax2lQ24KVQ_E9gfZKqi';
+  const FARMERS_STATIC = {
+  "amadou": {"mission": {"derniere_mission": {"date": "2026-08-15", "date_traitement": "2026-08-16", "parcelle": "Amadou - Champ Nord", "hectares_analyses": 3.1, "parcelles_couvertes": 1, "zones_critiques": 1, "zones_surveillance": 1, "sante_globale": 58, "culture": "Ma\u00efs", "photos": 62, "photos_alignees": 62, "altitude_m": 60, "gsd_cm": 1.8, "points_denses": 3500000, "georeferencement": "GPS embarqu\u00e9, sans GCP", "erreur_m": 0.35}, "repartition": {"saine": 10.0, "stress_leger": 45.0, "stress_severe": 45.0}}, "zones": {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"nom": "Zone 1", "surface_ha": 1.4, "vari": 0.32, "risque": "eleve", "causes": ["Manque d'eau"], "recommandations": ["V\u00e9rifier sol", "Paillage", "Contr\u00f4le 72h"], "priorite": "haute", "delai": "24 h", "confiance": "\u00e9lev\u00e9e", "verification": "Toucher terre"}, "geometry": {"type": "Polygon", "coordinates": [[[2.329, 6.396], [2.33, 6.396], [2.33, 6.397], [2.329, 6.397], [2.329, 6.396]]]}}, {"type": "Feature", "properties": {"nom": "Zone 2", "surface_ha": 1.2, "vari": 0.52, "risque": "modere", "causes": ["Carence"], "recommandations": ["Observer feuilles", "Compost", "V\u00e9rifier avant agir"], "priorite": "moyenne", "delai": "72 h", "confiance": "moyenne", "verification": "Observer feuilles"}, "geometry": {"type": "Polygon", "coordinates": [[[2.331, 6.396], [2.332, 6.396], [2.332, 6.397], [2.331, 6.397], [2.331, 6.396]]]}}, {"type": "Feature", "properties": {"nom": "Zone 3", "surface_ha": 0.5, "vari": 0.72, "risque": "faible", "causes": [], "recommandations": ["Maintenir", "Garder couvert", "Surveillance"], "priorite": "faible", "delai": "prochain vol", "confiance": "\u00e9lev\u00e9e", "verification": "Surveillance"}, "geometry": {"type": "Polygon", "coordinates": [[[2.333, 6.396], [2.334, 6.396], [2.334, 6.397], [2.333, 6.397], [2.333, 6.396]]]}}]}, "meta": {"nom": "Amadou - Champ Nord", "telephone": "01 98 41 92 40", "parcelle": "Champ Nord - 3,1 ha"}},
+  "fatou": {"mission": {"derniere_mission": {"date": "2026-08-14", "date_traitement": "2026-08-15", "parcelle": "Fatou - Bas-fond", "hectares_analyses": 5.3, "parcelles_couvertes": 1, "zones_critiques": 0, "zones_surveillance": 2, "sante_globale": 65, "culture": "Riz", "photos": 75, "photos_alignees": 75, "altitude_m": 60, "gsd_cm": 1.8, "points_denses": 4200000, "georeferencement": "GPS embarqu\u00e9, sans GCP", "erreur_m": 0.35}, "repartition": {"saine": 20.0, "stress_leger": 50.0, "stress_severe": 30.0}}, "zones": {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"nom": "Zone 1", "surface_ha": 2.0, "vari": 0.38, "risque": "eleve", "causes": ["Stress hydrique"], "recommandations": ["V\u00e9rifier sol", "Irriguer cibl\u00e9", "Paillage"], "priorite": "haute", "delai": "24 h", "confiance": "\u00e9lev\u00e9e", "verification": "Toucher terre"}, "geometry": {"type": "Polygon", "coordinates": [[[2.329, 6.396], [2.33, 6.396], [2.33, 6.397], [2.329, 6.397], [2.329, 6.396]]]}}, {"type": "Feature", "properties": {"nom": "Zone 2", "surface_ha": 2.5, "vari": 0.58, "risque": "modere", "causes": ["Carence l\u00e9g\u00e8re"], "recommandations": ["Analyse sol", "Compost"], "priorite": "moyenne", "delai": "72 h", "confiance": "moyenne", "verification": "Observer"}, "geometry": {"type": "Polygon", "coordinates": [[[2.331, 6.396], [2.332, 6.396], [2.332, 6.397], [2.331, 6.397], [2.331, 6.396]]]}}, {"type": "Feature", "properties": {"nom": "Zone 3", "surface_ha": 0.8, "vari": 0.78, "risque": "faible", "causes": [], "recommandations": ["Maintenir"], "priorite": "faible", "delai": "prochain vol", "confiance": "\u00e9lev\u00e9e", "verification": "Surveillance"}, "geometry": {"type": "Polygon", "coordinates": [[[2.333, 6.396], [2.334, 6.396], [2.334, 6.397], [2.333, 6.397], [2.333, 6.396]]]}}]}, "meta": {"nom": "Fatou - Bas-fond", "telephone": "01 97 22 33 44", "parcelle": "Bas-fond - 5,3 ha"}}
+};
 
 
   // Charge depuis Supabase ET data/farmers.json en parallèle, merge (offline-first)
@@ -65,6 +69,27 @@
     return map;
   }
 
+  // SYNCHRONE : vérifie ?farmer= immédiatement avec les données statiques embarquées
+  (function syncFarmerCheck(){
+    try{
+      const param = new URLSearchParams(location.search).get('farmer');
+      if(param && typeof FARMERS_STATIC !== 'undefined' && FARMERS_STATIC[param]){
+        const data = FARMERS_STATIC[param];
+        if(window.MISSIONS_DATA && data.mission){
+          Object.keys(window.MISSIONS_DATA).forEach(k=>delete window.MISSIONS_DATA[k]);
+          Object.assign(window.MISSIONS_DATA, data.mission);
+        }
+        if(window.ZONES_GEOJSON && data.zones){
+          Object.keys(window.ZONES_GEOJSON).forEach(k=>delete window.ZONES_GEOJSON[k]);
+          Object.assign(window.ZONES_GEOJSON, data.zones);
+        }
+        window.AGRIVISION_CURRENT_FARMER = param;
+        window.AGRIVISION_CURRENT_META = data.meta;
+        console.log('Farmer sync applied', param);
+      }
+    }catch(e){ console.warn('sync farmer failed', e); }
+  })();
+
   async function init(){
     // Récupère la clé Groq depuis Supabase pour tous les appareils (une fois pour tous)
     try{
@@ -106,6 +131,53 @@
       window.AGRIVISION_CURRENT_META = data.meta;
       // Affiche un bandeau "Vous consultez Amadou"
       showBanner(data.meta);
+      // Met à jour l'Accueil et les autres pages avec les données du farmer (car elles sont déjà rendues)
+      try{
+        const m = data.mission.derniere_mission;
+        const r = data.mission.repartition;
+        // Hero
+        const heroEyebrow = document.querySelector('.hero-final .eyebrow');
+        if(heroEyebrow) heroEyebrow.textContent = `Parcelle : ${m.parcelle} · ${m.date}`;
+        const heroMetric = document.querySelector('.hero-metric strong');
+        if(heroMetric) heroMetric.textContent = m.sante_globale + '%';
+        const heroMetricLabel = document.querySelector('.hero-metric span');
+        if(heroMetricLabel) heroMetricLabel.textContent = `Indice ${m.sante_globale}% — ${m.hectares_analyses} ha`;
+        // KPI
+        const kpis = document.querySelectorAll('.kpi');
+        if(kpis.length>=4){
+          const vals = [
+            [m.hectares_analyses+' ha','Surface classée'],
+            [Object.keys(data.zones.features||data.zones).length+'','Zones'],
+            [(m.zones_critiques??'—')+'','Zones prioritaires'],
+            [m.culture||'—','Culture']
+          ];
+          // For default homepage, the KPI are 59/59, 1,8cm etc, but for farmer we show surface
+          // Only update if we are on index and farmer is not default
+          if(location.pathname.endsWith('index.html')||location.pathname==='/'||location.pathname.endsWith('/')){
+            // Keep original KPI for default, but for farmer show his hectares
+          }
+        }
+        // Progress stack (répartition)
+        if(r){
+          const spans=document.querySelectorAll('.progress-stack span');
+          if(spans.length>=3){
+            spans[0].style.width=r.saine+'%';
+            spans[1].style.width=r.stress_leger+'%';
+            spans[2].style.width=r.stress_severe+'%';
+            const p = document.querySelector('.progress-stack')?.nextElementSibling;
+            if(p) p.innerHTML=`<b>${r.saine}%</b> de vigueur élevée · <b>${r.stress_leger}%</b> à surveiller · <b>${r.stress_severe}%</b> en priorité forte.`;
+          }
+        }
+        // Pour que toutes les pages (Accueil, Carte, Plan d'action...) affichent les bonnes données,
+        // on recharge une fois la page avec les données du farmer déjà en mémoire (évite le flash de l'ancienne mission)
+        if(!sessionStorage.getItem('agrivision_farmer_reloaded')){
+          sessionStorage.setItem('agrivision_farmer_reloaded','1');
+          // On garde le ?farmer= dans l'URL, les scripts au rechargement verront directement le bon farmer
+          location.reload();
+        } else {
+          sessionStorage.removeItem('agrivision_farmer_reloaded');
+        }
+      }catch(e){ console.warn('apply farmer to homepage failed', e); }
     } else if(paramId && !all[paramId]){
       console.warn('Agriculteur inconnu:', paramId);
       showBanner(null, paramId);

@@ -1,4 +1,4 @@
-const CACHE='agrivision-production-v26';
+const CACHE='agrivision-production-v27';
 const CORE=[
   './','./index.html','./analyse.html','./resultats.html','./actions.html','./qualite.html','./historique.html','./ia.html','./rapport.html','./apropos.html','./equipe.html','./offline.html',
   './css/style.css','./css/finale.css',
