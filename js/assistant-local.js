@@ -1,6 +1,15 @@
 document.addEventListener('DOMContentLoaded',()=>{
  const messages=document.getElementById('chat-messages'),input=document.getElementById('chat-input'),send=document.getElementById('btn-send');
- const keyInput=document.getElementById('ai-key'),status=document.getElementById('ai-status'),listen=document.getElementById('btn-listen'),mic=document.getElementById('btn-mic'),micStatus=document.getElementById('mic-status'),voiceSelect=document.getElementById('voice-select'),voiceTest=document.getElementById('voice-test');
+ const keyInput=document.getElementById('ai-key'),status=document.getElementById('ai-status')||(() =>{
+  // Crée un badge discret si l'ancien a été retiré (PDF)
+  const b=document.createElement('div');
+  b.id='ai-status';
+  b.style.cssText='position:absolute;top:8px;right:12px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800;z-index:10';
+  const host=document.querySelector('.assistant-main')||document.body;
+  host.style.position='relative';
+  host.prepend(b);
+  return b;
+})(),listen=document.getElementById('btn-listen'),mic=document.getElementById('btn-mic'),micStatus=document.getElementById('mic-status'),voiceSelect=document.getElementById('voice-select'),voiceTest=document.getElementById('voice-test');
  const zones=Object.fromEntries(ZONES_GEOJSON.features.map(f=>[f.properties.nom.toLowerCase(),f.properties])); const mission=MISSIONS_DATA.derniere_mission; const zoneList=ZONES_GEOJSON.features.map(f=>f.properties);
  const clean=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');let lastBot='';
  try{ if(keyInput) { keyInput.value=localStorage.getItem('agrivision_groq_key')||''; setStatus(); keyInput.addEventListener('input',()=>{const k=keyInput.value.trim();k?localStorage.setItem('agrivision_groq_key',k):localStorage.removeItem('agrivision_groq_key');setStatus()}); } else { setStatus(); } }catch(e){} 
