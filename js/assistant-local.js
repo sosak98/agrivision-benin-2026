@@ -1,15 +1,6 @@
 document.addEventListener('DOMContentLoaded',()=>{
  const messages=document.getElementById('chat-messages'),input=document.getElementById('chat-input'),send=document.getElementById('btn-send');
- const keyInput=document.getElementById('ai-key'),status=document.getElementById('ai-status')||(() =>{
-  // Crée un badge discret si l'ancien a été retiré (PDF)
-  const b=document.createElement('div');
-  b.id='ai-status';
-  b.style.cssText='position:absolute;top:8px;right:12px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800;z-index:10';
-  const host=document.querySelector('.assistant-main')||document.body;
-  host.style.position='relative';
-  host.prepend(b);
-  return b;
-})(),listen=document.getElementById('btn-listen'),mic=document.getElementById('btn-mic'),micStatus=document.getElementById('mic-status'),voiceSelect=document.getElementById('voice-select'),voiceTest=document.getElementById('voice-test');
+ const keyInput=document.getElementById('ai-key'),status=document.getElementById('ai-status'),listen=document.getElementById('btn-listen'),mic=document.getElementById('btn-mic'),micStatus=document.getElementById('mic-status'),voiceSelect=document.getElementById('voice-select'),voiceTest=document.getElementById('voice-test');
  const zones=Object.fromEntries(ZONES_GEOJSON.features.map(f=>[f.properties.nom.toLowerCase(),f.properties])); const mission=MISSIONS_DATA.derniere_mission; const zoneList=ZONES_GEOJSON.features.map(f=>f.properties);
  const clean=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');let lastBot='';
  try{ if(keyInput) { keyInput.value=localStorage.getItem('agrivision_groq_key')||''; setStatus(); keyInput.addEventListener('input',()=>{const k=keyInput.value.trim();k?localStorage.setItem('agrivision_groq_key',k):localStorage.removeItem('agrivision_groq_key');setStatus()}); } else { setStatus(); } }catch(e){} 
@@ -46,7 +37,23 @@ document.addEventListener('DOMContentLoaded',()=>{
   return `Je n’ai pas encore une réponse simple et vérifiée pour cette question. Vous pouvez demander : « Que dois-je faire demain ? », « Explique les couleurs », « Comment vérifier l’humidité ? » ou « Qu’est-ce que le VARI ? »`}
  function context(){const zonesTxt=zoneList.map(z=>`${z.nom}: ${z.surface_ha} ha, VARI ${z.vari}, risque ${z.risque}, causes possibles ${z.causes?.join(', ')||'aucune'}`).join('\n');return `Tu es le guide pédagogique d'AgriVision Bénin. Réponds en français très simple, explique chaque mot scientifique et donne 3 à 5 étapes pratiques. N'invente rien. Mission du ${mission.date}, ${mission.parcelle}, ${mission.hectares_analyses} ha, indice ${mission.sante_globale} %. Zones :\n${zonesTxt}\nLe VARI n'est pas un NDVI. Ne prescris jamais eau, engrais ou pesticide sans vérification au sol.`}
  async function onlineAnswer(q,key){const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'groq/compound-mini',messages:[{role:'system',content:context()},{role:'user',content:q}],temperature:.3,max_tokens:600})});if(!r.ok){ const txt=await r.text(); throw new Error('API '+r.status+' '+txt.slice(0,200)); }const d=await r.json();return d.choices?.[0]?.message?.content||localAnswer(q)}
- async function submit(){const q=input.value.trim();if(!q)return;add('user',q);input.value='';send.disabled=true;const wait=add('bot','Je prépare une explication simple…',true);try{ const key=localStorage.getItem('agrivision_groq_key')||''; if(key) setBot(wait, await onlineAnswer(q,key)); else setBot(wait, localAnswer(q)); }catch(e){ console.warn('Groq failed, fallback local', e); setBot(wait, localAnswer(q)); }finally{send.disabled=false}}
+ async function submit(){
+  const q=input.value.trim();if(!q)return;add('user',q);input.value='';send.disabled=true;
+  const wait=add('bot','Je prépare une explication simple…',true);
+  try{
+    let key=localStorage.getItem('agrivision_groq_key')||'';
+    // Si pas de clé en local (1er passage sur ce téléphone), va la chercher direct dans Supabase
+    if(!key){
+      try{
+        const gr=await fetch('https://vohgjznludhwsinervkm.supabase.co/rest/v1/app_config?key=eq.groq_key&select=value', {
+          headers:{'apikey':'sb_publishable_rfg-pzSClJ0pax2lQ24KVQ_E9gfZKqi','Authorization':'Bearer sb_publishable_rfg-pzSClJ0pax2lQ24KVQ_E9gfZKqi'}
+        });
+        if(gr.ok){ const gj=await gr.json(); const gval=gj[0]?.value; if(gval && gval.length>15){ key=gval; localStorage.setItem('agrivision_groq_key', gval); } }
+      }catch(e){ console.warn('Supabase Groq fetch failed in assistant', e); }
+    }
+    if(key) setBot(wait, await onlineAnswer(q,key)); else setBot(wait, localAnswer(q));
+  }catch(e){ console.warn('Groq failed, fallback local', e); setBot(wait, localAnswer(q)); }finally{send.disabled=false}
+}
  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;let recognition=null;if(Recognition){recognition=new Recognition();recognition.lang='fr-FR';recognition.interimResults=true;recognition.continuous=false;recognition.onstart=()=>{mic.classList.add('recording');mic.innerHTML='<span class="btn-icon">⏹</span><span class="btn-label">Arrêter</span>';micStatus.textContent='Je vous écoute… Parlez lentement et faites une phrase courte.'};recognition.onresult=e=>{let finalText='',partial='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;e.results[i].isFinal?finalText+=t:partial+=t}input.value=finalText||partial;if(finalText){micStatus.textContent='Phrase entendue : « '+finalText+' »';setTimeout(submit,350)}};recognition.onerror=e=>{micStatus.textContent=e.error==='not-allowed'?'Autorisez le microphone dans le navigateur.':'Je n’ai pas bien compris. Réessayez lentement ou utilisez le clavier.'};recognition.onend=()=>{mic.classList.remove('recording');mic.innerHTML='<span class="btn-icon">🎙️</span><span class="btn-label">Parler</span>'};mic.addEventListener('click',()=>{try{mic.classList.contains('recording')?recognition.stop():recognition.start()}catch(e){}})}else{mic.disabled=true;mic.title='Reconnaissance vocale non disponible sur ce navigateur';micStatus.textContent='La dictée vocale n’est pas disponible sur ce navigateur. Le clavier et la lecture audio restent utilisables.'}
  send.addEventListener('click',submit);input.addEventListener('keydown',e=>{if(e.key==='Enter')submit()});listen.addEventListener('click',()=>lastBot&&speak(lastBot));voiceTest.addEventListener('click',()=>speak('Bonjour. Je suis votre guide AgriVision. Je vais vous expliquer la carte avec des mots simples.'));
  document.getElementById('toggle-glossary')?.addEventListener('click',e=>{const open=document.querySelector('.assistant-main').classList.toggle('glossary-open');e.currentTarget.textContent=open?'✕ Fermer les explications':'📘 Comprendre les mots scientifiques'});document.getElementById('toggle-options')?.addEventListener('click',e=>{const open=document.querySelector('.chat-shell').classList.toggle('options-open');e.currentTarget.textContent=open?'✕ Masquer les options':'🔊 Options de voix'});
